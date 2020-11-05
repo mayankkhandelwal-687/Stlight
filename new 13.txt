@@ -1,0 +1,29 @@
+<?php
+$data=$_GET['range'];
+$pieces = explode(",", $data);
+if ($pieces[0] < $pieces[1]) {
+// ini_set('memory_limit', '-1');
+// ini_set('display_errors',1);
+$arr=array();
+$connection=mysqli_connect("localhost","root","Sstpl@210115","SSTPL_UPLINK") or die("could not connect");
+$selectdata=mysqli_query($connection, "SELECT DISTINCT Address from SSTPL_UP_Data Where Modulation= 'Ideal_Prepaid' AND PAYLOAD LIKE '%49444c%' AND Time > '2019-12-01 00:00:00'");
+while ($newdata=mysqli_fetch_assoc($selectdata)) {$arr[]=$newdata['Address'];}
+if ($pieces[1]>count($arr)) {$pieces[1]=count($arr);}
+$count=0;
+for ($i=$pieces[0]; $i <= $pieces[1]; $i++) { 
+$count=$count+1;
+$meterids=array();
+$select_present="SELECT * FROM SSTPL_UP_Data WHERE Modulation='Ideal_Prepaid' AND PAYLOAD NOT LIKE '%4e41434b%' AND PAYLOAD LIKE '%49444c%' AND Address='$arr[$i]' Order by id desc";
+$run_present=mysqli_query($connection,$select_present);
+while( $row = mysqli_fetch_assoc($run_present) ) {
+$value=substr($row['PAYLOAD'],16,2);				 	
+if (!in_array($value, $meterids))
+{$meterids[] = $value; }
+}
+echo $count." | ".$arr[$i]." | ".count($meterids)."<br>";
+}
+}else{
+echo "<script> alert('Starting index range must be smaller than ending range valu!') </script>";
+}
+
+?>						
